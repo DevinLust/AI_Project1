@@ -18,7 +18,38 @@ class Node:
         return self.cost < other.cost
 
     def to_String(self):
-        return "state: " + str(self.state) + ", cost: " + str(self.cost)
+        notCrossed = ""
+        crossed = ""
+        for i in range(len(self.state)):
+            if (self.state[i] == True):
+                match i:
+                    case 0:
+                        crossed = crossed + "A"
+                    case 1:
+                        crossed = crossed + "B"
+                    case 2:
+                        crossed = crossed + "C"
+                    case 3:
+                        crossed = crossed + "D"
+                    case 4:
+                        crossed = crossed + "P"
+                    case _:
+                        print("Good people don\'t end up here")
+            else:
+                match i:
+                    case 0:
+                        notCrossed = notCrossed + "A"
+                    case 1:
+                        notCrossed = notCrossed + "B"
+                    case 2:
+                        notCrossed = notCrossed + "C"
+                    case 3:
+                        notCrossed = notCrossed + "D"
+                    case 4:
+                        notCrossed = notCrossed + "P"
+                    case _:
+                        print("Good people don\'t end up here")
+        return "state: [not crossed: (" + notCrossed + "), crossed: (" + crossed + ")], cost: " + str(self.cost)
 
 # return the index of a node that has the same state as child, -1 otherwise
 
@@ -47,14 +78,15 @@ def UniformCost(initialState, goalState):
             child = Node(state=nextState, parent=smallest_item,
                          cost=smallest_item.cost + 1)
             repeatIdx = repeatState(heap, child)
-            if (not (repeatIdx != -1 or child in explored)):
+            repeatExplored = repeatState(explored, child)
+            if (repeatIdx == -1 and repeatExplored == -1):
                 heapq.heappush(heap, child)
             elif (repeatIdx != -1 and heap[repeatIdx].cost > child.cost):
                 del heap[repeatIdx]
                 heapq.heapify(heap)
                 heapq.heappush(heap, child)
 
-    return False
+    return None
 
 
 # Provides all next possible states from a current initialState as a list of states
@@ -81,5 +113,15 @@ def succ(initialState):
 
     return result
 
+def printSolutionPath(solution):
+    if (solution != None):
+        printSolutionPath(solution.parent)
+        print(solution.to_String())
+    else:
+        print("Solution:")
 
-UniformCost([False, False, False, False, False], GOAL_STATE)
+solution = UniformCost([False, False, False, False, False], GOAL_STATE)
+if (solution != None):
+    printSolutionPath(solution)
+else:
+    print("No solution")
