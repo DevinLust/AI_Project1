@@ -12,10 +12,16 @@ class Node:
         self.parent = parent
         self.cost = cost
 
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+    def to_String(self):
+        return "state: " + str(self.state) + ", cost: " + str(self.cost)
+
 # return the index of a node that has the same state as child, -1 otherwise
 def repeatState(heap, child):
     for i in range(len(heap)):
-        if heap[i][1].state == child.state:
+        if heap[i].state == child.state:
             return i
     return -1
 
@@ -23,23 +29,24 @@ def UniformCost(initialState, goalState):
     node = Node(state=initialState, parent=None, cost=0)
     explored = []
     heap = []
-    heapq.heappush(heap, (node.cost, node))
+    heapq.heappush(heap, node)
+    print("Heap: " + str(heap)) # debug print
     while (len(heap) > 0):
-        smallest_item = heapq.heappop(heap)
-        if (smallest_item[1].state == goalState):
-            return smallest_item[1]
-        explored.append(smallest_item[1])
-        print(smallest_item)
-        successors = succ(smallest_item[1].state)
+        smallest_item = heapq.heappop(heap) # the heap stores nodes
+        print("Expanded Node: " + smallest_item.to_String()) # debug print
+        if (smallest_item.state == goalState):
+            return smallest_item
+        explored.append(smallest_item)
+        successors = succ(smallest_item.state)
         for nextState in successors:
-            child = Node(state=nextState, parent=smallest_item[1], cost=smallest_item[0] + 1)
-            if (not (child in heap or child in explored)):
-                heapq.heappush(heap, (child.cost, child))
+            child = Node(state=nextState, parent=smallest_item, cost=smallest_item.cost + 1)
             repeatIdx = repeatState(heap, child)
-            if (repeatIdx != -1 and heap[repeatIdx][1].cost > child.cost):
+            if (not (repeatIdx != -1 or child in explored)):
+                heapq.heappush(heap, child)
+            elif (repeatIdx != -1 and heap[repeatIdx].cost > child.cost):
                 del heap[repeatIdx]
                 heapq.heapify(heap)
-                heapq.heappush(heap, (child.cost, child))
+                heapq.heappush(heap, child)
 
     return False
 
@@ -69,5 +76,4 @@ def succ(initialState):
     return result
 
 
-print("hello")
 UniformCost([False, False, False, False, False], GOAL_STATE)
