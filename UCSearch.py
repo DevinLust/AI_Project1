@@ -12,15 +12,37 @@ class Node:
         self.parent = parent
         self.cost = cost
 
+# return the index of a node that has the same state as child, -1 otherwise
+def repeatState(heap, child):
+    for i in range(len(heap)):
+        if heap[i][1].state == child.state:
+            return i
+    return -1
 
 def UniformCost(initialState, goalState):
     node = Node(state=initialState, parent=None, cost=0)
-
+    explored = []
     heap = []
     heapq.heappush(heap, (node.cost, node))
-    smallest_item = heapq.heappop(heap)
+    while (len(heap) > 0):
+        smallest_item = heapq.heappop(heap)
+        if (smallest_item[1].state == goalState):
+            return smallest_item[1]
+        explored.append(smallest_item[1])
+        print(smallest_item)
+        successors = succ(smallest_item[1].state)
+        for nextState in successors:
+            child = Node(state=nextState, parent=smallest_item[1], cost=smallest_item[0] + 1)
+            if (not (child in heap or child in explored)):
+                heapq.heappush(heap, (child.cost, child))
+            repeatIdx = repeatState(heap, child)
+            if (repeatIdx != -1 and heap[repeatIdx][1].cost > child.cost):
+                del heap[repeatIdx]
+                heapq.heapify(heap)
+                heapq.heappush(heap, (child.cost, child))
 
-    explored = []
+    return False
+
 
 # Provides all next possible states from a current initialState as a list of states
 def succ(initialState):
@@ -48,4 +70,4 @@ def succ(initialState):
 
 
 print("hello")
-print(succ([False, False, False, False, False]))
+UniformCost([False, False, False, False, False], GOAL_STATE)
