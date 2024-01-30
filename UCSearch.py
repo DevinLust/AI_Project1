@@ -73,10 +73,8 @@ def UniformCost(initialState, goalState):
         if (smallest_item.state == goalState):
             return smallest_item
         explored.append(smallest_item)
-        successors = succ(smallest_item.state)
-        for nextState in successors:
-            child = Node(state=nextState, parent=smallest_item,
-                         cost=smallest_item.cost + 1)
+        successors = succ(smallest_item)
+        for child in successors:
             repeatIdx = repeatState(heap, child)
             repeatExplored = repeatState(explored, child)
             if (repeatIdx == -1 and repeatExplored == -1):
@@ -90,28 +88,33 @@ def UniformCost(initialState, goalState):
 
 
 # Provides all next possible states from a current initialState as a list of states
-def succ(initialState):
+def succ(initialNode):
     numFlips = 0
     result = []
 
-    powerLocation = initialState[POWER_INDEX]
+    powerLocation = initialNode.state[POWER_INDEX]
     for i in range(POWER_INDEX):
-        if (initialState[i] == powerLocation):
+        if (initialNode.state[i] == powerLocation):
             # handles the cases a single robot crosses
-            potentialState = initialState.copy()
+            potentialState = initialNode.state.copy()
             potentialState[i] = not potentialState[i]
             potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
-            result.append(potentialState)
+            node = Node(state=potentialState, parent=initialNode,
+                        cost=TIMES[str(i)] + initialNode.cost)
+            result.append(node)
             for j in range(i + 1, POWER_INDEX):
-                if (initialState[j] == powerLocation):
+                if (initialNode.state[j] == powerLocation):
                     # handles the cases in which pairs cross
-                    potentialState = initialState.copy()
+                    potentialState = initialNode.state.copy()
                     potentialState[i] = not potentialState[i]
                     potentialState[j] = not potentialState[j]
                     potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
-                    result.append(potentialState)
+                    node = Node(state=potentialState, parent=initialNode,
+                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost)
+                    result.append(node)
 
     return result
+
 
 def printSolutionPath(solution):
     if (solution != None):
@@ -119,6 +122,7 @@ def printSolutionPath(solution):
         print(solution.to_String())
     else:
         print("Solution:")
+
 
 solution = UniformCost([False, False, False, False, False], GOAL_STATE)
 if (solution != None):
