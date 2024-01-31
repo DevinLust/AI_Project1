@@ -54,6 +54,10 @@ class Node:
 # return the index of a node that has the same state as child, -1 otherwise
 
 
+def heuristic():
+    pass
+
+
 def repeatState(heap, child):
     for i in range(len(heap)):
         if heap[i].state == child.state:
