@@ -9,13 +9,14 @@ TIMES = {"0": 1, "1": 2, "2": 5, "3": 10}
 
 class Node:
 
-    def __init__(self, state, parent, cost):
+    def __init__(self, state, parent, cost, heuristic):
         self.state = state
         self.parent = parent
         self.cost = cost
+        self.heuristic = heuristic
 
     def __lt__(self, other):
-        return self.cost < other.cost
+        return self.cost + self.heuristic < other.cost + self.heuristic
 
     def to_String(self):
         notCrossed = ""
@@ -49,28 +50,29 @@ class Node:
                         notCrossed = notCrossed + "P"
                     case _:
                         print("Good people don\'t end up here")
-        return "state: [not crossed: (" + notCrossed + "), crossed: (" + crossed + ")], cost: " + str(self.cost)
+        return "state: [not crossed: (" + notCrossed + "), crossed: (" + crossed + ")], cost: " + str(self.cost) + ",  Heuristic: " + str(self.heuristic)
 
 # return the index of a node that has the same state as child, -1 otherwise
 
 
 def heuristic(state):
     value = 0
+    newState = state.copy()
 
     # check if goal state is reached
-    if all(state):
+    if all(newState):
         return value
 
     # find where power pack is
-    power = state[POWER_INDEX]
+    power = newState[POWER_INDEX]
 
     if power:
         # flip power pack and one robot to beginning
-        state[POWER_INDEX] = False
+        newState[POWER_INDEX] = False
 
-        for i in range(len(state) - 1):
-            if state[i] == True:
-                state[i] = False
+        for i in range(len(newState) - 1):
+            if newState[i] == True:
+                newState[i] = False
                 break
 
         value += 1
@@ -78,11 +80,11 @@ def heuristic(state):
     else:
 
         # flip power pack and one or two robot to beginning
-        state[POWER_INDEX] = False
+        newState[POWER_INDEX] = True
 
         numBots = 0
-        for i in range(len(state) - 1):
-            if state[i] == False:
+        for i in range(len(newState) - 1):
+            if newState[i] == False:
                 numBots += 1
 
         # set numBots to max of 2
@@ -91,14 +93,15 @@ def heuristic(state):
 
         i = 0
         flips = 0
-        while i < len(state) - 1 and flips < numBots:
-            if state[i] == False:
-                state[i] = True
+        while (i < len(newState) - 1 and flips < numBots):
+            if newState[i] == False:
+                newState[i] = True
                 flips += 1
+            i += 1
 
         value += 1
 
-    return value + heuristic(state)
+    return value + heuristic(newState)
 
 
 def repeatState(heap, child):
@@ -109,16 +112,24 @@ def repeatState(heap, child):
 
 
 def AstarSearch(initialState, goalState):
-    node = Node(state=initialState, parent=None, cost=0)
+
+    nodeCount = 0
+    node = Node(state=initialState, parent=None, cost=0,
+                heuristic=heuristic(initialState))
     explored = []
     heap = []
     heapq.heappush(heap, node)
-    print("Heap: " + str(heap))  # debug print
-    while (len(heap) > 0):
+
+    # while frontier is not empty, search for goal state
+    solution = None
+    while (len(heap) > 0 and not solution):
         smallest_item = heapq.heappop(heap)  # the heap stores nodes
         print("Expanded Node: " + smallest_item.to_String())  # debug print
+
+        nodeCount += 1
         if (smallest_item.state == goalState):
-            return smallest_item
+            solution = smallest_item
+            continue
         explored.append(smallest_item)
         successors = succ(smallest_item)
         for child in successors:
@@ -131,12 +142,11 @@ def AstarSearch(initialState, goalState):
                 heapq.heapify(heap)
                 heapq.heappush(heap, child)
 
-    return None
+    return solution, nodeCount
 
 
 # Provides all next possible states from a current initialState as a list of states
 def succ(initialNode):
-    numFlips = 0
     result = []
 
     powerLocation = initialNode.state[POWER_INDEX]
@@ -147,7 +157,8 @@ def succ(initialNode):
             potentialState[i] = not potentialState[i]
             potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
             node = Node(state=potentialState, parent=initialNode,
-                        cost=TIMES[str(i)] + initialNode.cost + heuristic(potentialState))
+                        cost=TIMES[str(i)] + initialNode.cost, heuristic=heuristic(potentialState))
+
             result.append(node)
             for j in range(i + 1, POWER_INDEX):
                 if (initialNode.state[j] == powerLocation):
@@ -157,7 +168,8 @@ def succ(initialNode):
                     potentialState[j] = not potentialState[j]
                     potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
                     node = Node(state=potentialState, parent=initialNode,
-                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost + heuristic(potentialState))
+                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost, heuristic=heuristic(potentialState))
+
                     result.append(node)
 
     return result
@@ -171,8 +183,11 @@ def printSolutionPath(solution):
         print("Solution:")
 
 
-solution = AstarSearch([False, False, False, False, False], GOAL_STATE)
+solution, nodeCount = AstarSearch(
+    [False, False, False, False, False], GOAL_STATE)
 if (solution != None):
     printSolutionPath(solution)
 else:
     print("No solution")
+
+print("Nodes expanded: " + str(nodeCount))

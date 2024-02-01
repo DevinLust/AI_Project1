@@ -1,0 +1,1 @@
+print("Nodes expanded: " + str(nodeCount))

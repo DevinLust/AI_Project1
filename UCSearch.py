@@ -62,16 +62,21 @@ def repeatState(heap, child):
 
 
 def UniformCost(initialState, goalState):
+    nodeCount = 0
     node = Node(state=initialState, parent=None, cost=0)
     explored = []
     heap = []
     heapq.heappush(heap, node)
     print("Heap: " + str(heap))  # debug print
-    while (len(heap) > 0):
+
+    solution = None
+    while (len(heap) > 0 and not solution):
         smallest_item = heapq.heappop(heap)  # the heap stores nodes
         print("Expanded Node: " + smallest_item.to_String())  # debug print
+        nodeCount += 1
         if (smallest_item.state == goalState):
-            return smallest_item
+            solution = smallest_item
+            continue
         explored.append(smallest_item)
         successors = succ(smallest_item)
         for child in successors:
@@ -84,7 +89,7 @@ def UniformCost(initialState, goalState):
                 heapq.heapify(heap)
                 heapq.heappush(heap, child)
 
-    return None
+    return solution, nodeCount
 
 
 # Provides all next possible states from a current initialState as a list of states
@@ -124,8 +129,11 @@ def printSolutionPath(solution):
         print("Solution:")
 
 
-solution = UniformCost([False, False, False, False, False], GOAL_STATE)
+solution, nodeCount = UniformCost(
+    [False, False, False, False, False], GOAL_STATE)
 if (solution != None):
     printSolutionPath(solution)
 else:
     print("No solution")
+
+print("Nodes expanded: " + str(nodeCount))
