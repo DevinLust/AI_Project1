@@ -54,8 +54,51 @@ class Node:
 # return the index of a node that has the same state as child, -1 otherwise
 
 
-def heuristic():
-    pass
+def heuristic(state):
+    value = 0
+
+    # check if goal state is reached
+    if all(state):
+        return value
+
+    # find where power pack is
+    power = state[POWER_INDEX]
+
+    if power:
+        # flip power pack and one robot to beginning
+        state[POWER_INDEX] = False
+
+        for i in range(len(state) - 1):
+            if state[i] == True:
+                state[i] = False
+                break
+
+        value += 1
+
+    else:
+
+        # flip power pack and one or two robot to beginning
+        state[POWER_INDEX] = False
+
+        numBots = 0
+        for i in range(len(state) - 1):
+            if state[i] == False:
+                numBots += 1
+
+        # set numBots to max of 2
+        if numBots > 2:
+            numBots = 2
+
+        i = 0
+        flips = 0
+        while i < len(state) - 1 and flips < numBots:
+            if state[i] == False:
+                state[i] = True
+                flips += 1
+
+        value += 1
+
+    return value + heuristic(state)
 
 
 def repeatState(heap, child):
@@ -65,7 +108,7 @@ def repeatState(heap, child):
     return -1
 
 
-def UniformCost(initialState, goalState):
+def AstarSearch(initialState, goalState):
     node = Node(state=initialState, parent=None, cost=0)
     explored = []
     heap = []
@@ -104,7 +147,7 @@ def succ(initialNode):
             potentialState[i] = not potentialState[i]
             potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
             node = Node(state=potentialState, parent=initialNode,
-                        cost=TIMES[str(i)] + initialNode.cost)
+                        cost=TIMES[str(i)] + initialNode.cost + heuristic(potentialState))
             result.append(node)
             for j in range(i + 1, POWER_INDEX):
                 if (initialNode.state[j] == powerLocation):
@@ -114,7 +157,7 @@ def succ(initialNode):
                     potentialState[j] = not potentialState[j]
                     potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
                     node = Node(state=potentialState, parent=initialNode,
-                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost)
+                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost + heuristic(potentialState))
                     result.append(node)
 
     return result
@@ -128,7 +171,7 @@ def printSolutionPath(solution):
         print("Solution:")
 
 
-solution = UniformCost([False, False, False, False, False], GOAL_STATE)
+solution = AstarSearch([False, False, False, False, False], GOAL_STATE)
 if (solution != None):
     printSolutionPath(solution)
 else:
