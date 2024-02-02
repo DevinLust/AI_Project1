@@ -1,23 +1,25 @@
 # heapq for priority queue
 import heapq
+import sys
 
 GOAL_STATE = [True, True, True, True, True]  # A, B, C, D, P
 POWER_INDEX = 4  # Index of the power supply
 
 TIMES = {"0": 1, "1": 2, "2": 5, "3": 10}
-
+INDEXES = {"A": 0, "B": 1, "C": 2, "D": 3, "P": 4}
 
 class Node:
 
-    def __init__(self, state, parent, cost):
+    def __init__(self, state, parent, cost, depth):
         self.state = state
         self.parent = parent
         self.cost = cost
+        self.depth = depth
 
     def __lt__(self, other):
         return self.cost < other.cost
-
-    def to_String(self):
+    
+    def str_state(self):
         notCrossed = ""
         crossed = ""
         for i in range(len(self.state)):
@@ -49,11 +51,20 @@ class Node:
                         notCrossed = notCrossed + "P"
                     case _:
                         print("Good people don\'t end up here")
-        return "state: [not crossed: (" + notCrossed + "), crossed: (" + crossed + ")], cost: " + str(self.cost)
+        return "[not crossed: (" + notCrossed + "), crossed: (" + crossed + ")]"
+
+    def to_String(self):
+        string = "state: " + self.str_state() + ", cost: " + str(self.cost) + ", Depth: " + str(self.depth)
+        if (self.parent != None):
+            string += "\nParent State: " + self.parent.str_state()
+        else:
+            string += "\nParent State: None"
+        string += '\n'
+        return  string
 
 # return the index of a node that has the same state as child, -1 otherwise
 
-
+# Check to see if state is already in heap
 def repeatState(heap, child):
     for i in range(len(heap)):
         if heap[i].state == child.state:
@@ -63,7 +74,7 @@ def repeatState(heap, child):
 
 def UniformCost(initialState, goalState):
     nodeCount = 0
-    node = Node(state=initialState, parent=None, cost=0)
+    node = Node(state=initialState, parent=None, cost=0, depth=0)
     explored = []
     heap = []
     heapq.heappush(heap, node)
@@ -105,7 +116,7 @@ def succ(initialNode):
             potentialState[i] = not potentialState[i]
             potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
             node = Node(state=potentialState, parent=initialNode,
-                        cost=TIMES[str(i)] + initialNode.cost)
+                        cost=TIMES[str(i)] + initialNode.cost, depth=initialNode.depth + 1)
             result.append(node)
             for j in range(i + 1, POWER_INDEX):
                 if (initialNode.state[j] == powerLocation):
@@ -115,7 +126,7 @@ def succ(initialNode):
                     potentialState[j] = not potentialState[j]
                     potentialState[POWER_INDEX] = not potentialState[POWER_INDEX]
                     node = Node(state=potentialState, parent=initialNode,
-                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost)
+                                cost=max(TIMES[str(i)], TIMES[str(j)]) + initialNode.cost, depth=initialNode.depth + 1)
                     result.append(node)
 
     return result
@@ -126,11 +137,19 @@ def printSolutionPath(solution):
         printSolutionPath(solution.parent)
         print(solution.to_String())
     else:
-        print("Solution:")
+        print("\nSolution:")
 
+initialState = [False] * 5
+# get initialState from command line input
+for robot in sys.argv[1]:
+    if (robot != '\"'):
+        initialState[INDEXES[robot]] = False
 
-solution, nodeCount = UniformCost(
-    [False, False, False, False, False], GOAL_STATE)
+for robot in sys.argv[2]:
+    if (robot != '\"'):
+        initialState[INDEXES[robot]] = True
+
+solution, nodeCount = UniformCost(initialState, GOAL_STATE)
 if (solution != None):
     printSolutionPath(solution)
 else:
