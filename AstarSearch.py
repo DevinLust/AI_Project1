@@ -16,7 +16,7 @@ class Node:
         self.heuristic = heuristic
 
     def __lt__(self, other):
-        return self.cost + self.heuristic < other.cost + self.heuristic
+        return self.cost + self.heuristic < other.cost + other.heuristic
 
     def to_String(self):
         notCrossed = ""
