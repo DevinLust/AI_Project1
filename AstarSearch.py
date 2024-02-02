@@ -64,9 +64,7 @@ class Node:
         string += '\n'
         return  string
 
-# return the index of a node that has the same state as child, -1 otherwise
-
-
+# Determine the heuristic of a particular state
 def heuristic(state):
     value = 0
     newState = state.copy()
@@ -116,14 +114,14 @@ def heuristic(state):
     return value + heuristic(newState)
 
 
-# Check to see if state is already in heap
+# return the index of a node that has the same state as child, -1 otherwise
 def repeatState(heap, child):
     for i in range(len(heap)):
         if heap[i].state == child.state:
             return i
     return -1
 
-
+# Astar search using a heuristic that each robot takes 1 minute to cross
 def AstarSearch(initialState, goalState):
 
     nodeCount = 0
@@ -137,13 +135,16 @@ def AstarSearch(initialState, goalState):
     solution = None
     while (len(heap) > 0 and not solution):
         smallest_item = heapq.heappop(heap)  # the heap stores nodes
-        print("Expanded Node: " + smallest_item.to_String())  # debug print
+        print("Expanded Node: " + smallest_item.to_String())  # print expanded node
 
         nodeCount += 1
+        # check for goal state
         if (smallest_item.state == goalState):
             solution = smallest_item
             continue
         explored.append(smallest_item)
+
+        # find successors
         successors = succ(smallest_item)
         for child in successors:
             repeatIdx = repeatState(heap, child)
@@ -187,7 +188,7 @@ def succ(initialNode):
 
     return result
 
-
+# print the final solution path
 def printSolutionPath(solution):
     if (solution != None):
         printSolutionPath(solution.parent)
@@ -195,6 +196,7 @@ def printSolutionPath(solution):
     else:
         print("\nSolution:")
 
+# Test harness code
 initialState = [False] * 5
 # get initialState from command line input
 for robot in sys.argv[1]:
