@@ -1,4 +1,4 @@
-Authors: Devin Lust and Jake Bailey
+Authors: Devin Lust and Jacob Bailey
 
 Type "ptyhon UCSearch.py" or "python AstarSearch.py" in the command
 line to run the programs. Include two input strings in the form

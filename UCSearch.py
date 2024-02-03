@@ -8,6 +8,7 @@ POWER_INDEX = 4  # Index of the power supply
 TIMES = {"0": 1, "1": 2, "2": 5, "3": 10}
 INDEXES = {"A": 0, "B": 1, "C": 2, "D": 3, "P": 4}
 
+
 class Node:
 
     def __init__(self, state, parent, cost, depth):
@@ -18,7 +19,7 @@ class Node:
 
     def __lt__(self, other):
         return self.cost < other.cost
-    
+
     def str_state(self):
         notCrossed = ""
         crossed = ""
@@ -54,17 +55,18 @@ class Node:
         return "[not crossed: (" + notCrossed + "), crossed: (" + crossed + ")]"
 
     def to_String(self):
-        string = "state: " + self.str_state() + ", cost: " + str(self.cost) + ", Depth: " + str(self.depth)
+        string = "state: " + self.str_state() + ", cost: " + str(self.cost) + \
+            ", Depth: " + str(self.depth)
         if (self.parent != None):
             string += "\nParent State: " + self.parent.str_state()
         else:
             string += "\nParent State: None"
         string += '\n'
-        return  string
-
-# return the index of a node that has the same state as child, -1 otherwise
+        return string
 
 # Check to see if state is already in heap
+
+
 def repeatState(heap, child):
     for i in range(len(heap)):
         if heap[i].state == child.state:
@@ -72,23 +74,28 @@ def repeatState(heap, child):
     return -1
 
 
+# find the lowest cost path to goal state using the cost for each robot
 def UniformCost(initialState, goalState):
     nodeCount = 0
     node = Node(state=initialState, parent=None, cost=0, depth=0)
     explored = []
     heap = []
     heapq.heappush(heap, node)
-    print("Heap: " + str(heap))  # debug print
 
+    # search for goal state while there are nodes in the frontier
     solution = None
     while (len(heap) > 0 and not solution):
-        smallest_item = heapq.heappop(heap)  # the heap stores nodes
-        print("Expanded Node: " + smallest_item.to_String())  # debug print
+        smallest_item = heapq.heappop(heap)
         nodeCount += 1
+
+        # set solution node when goal state is met
         if (smallest_item.state == goalState):
             solution = smallest_item
             continue
+
         explored.append(smallest_item)
+
+        # find successors to search through
         successors = succ(smallest_item)
         for child in successors:
             repeatIdx = repeatState(heap, child)
@@ -105,11 +112,11 @@ def UniformCost(initialState, goalState):
 
 # Provides all next possible states from a current initialState as a list of states
 def succ(initialNode):
-    numFlips = 0
     result = []
 
     powerLocation = initialNode.state[POWER_INDEX]
     for i in range(POWER_INDEX):
+
         if (initialNode.state[i] == powerLocation):
             # handles the cases a single robot crosses
             potentialState = initialNode.state.copy()
@@ -118,6 +125,7 @@ def succ(initialNode):
             node = Node(state=potentialState, parent=initialNode,
                         cost=TIMES[str(i)] + initialNode.cost, depth=initialNode.depth + 1)
             result.append(node)
+
             for j in range(i + 1, POWER_INDEX):
                 if (initialNode.state[j] == powerLocation):
                     # handles the cases in which pairs cross
@@ -132,6 +140,7 @@ def succ(initialNode):
     return result
 
 
+# print solution information
 def printSolutionPath(solution):
     if (solution != None):
         printSolutionPath(solution.parent)
@@ -139,7 +148,9 @@ def printSolutionPath(solution):
     else:
         print("\nSolution:")
 
+
 initialState = [False] * 5
+
 # get initialState from command line input
 for robot in sys.argv[1]:
     if (robot != '\"'):
